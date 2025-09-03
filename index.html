@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <meta name="theme-color" content="#317EFB"/>
+  <link rel="manifest" href="manifest.json" />
+  <link rel="icon" href="icons/icon-192.png" sizes="192x192">
+  <title>PWA File System API</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 20px;
+      background-color: #f4f4f4;
+      color: #333;
+      text-align: center;
+    }
+    textarea {
+      margin-top: 20px;
+      width: 90%;
+      max-width: 800px;
+      padding: 10px;
+      font-size: 16px;
+    }
+    button {
+      padding: 10px 20px;
+      margin: 10px;
+      font-size: 16px;
+      cursor: pointer;
+    }
+  </style>
+</head>
+<body>
+  <h1>PWA File System API Demo</h1>
+  <button id="openFile">Open File</button>
+  <button id="saveFile">Save File</button>
+  <button id="downloadFile">Download</button>
+  <textarea id="textArea" rows="20" placeholder="File content will appear here..."></textarea>
+
+  <script>
+    let fileHandle;
+    const textarea = document.getElementById('textArea');
+
+    document.getElementById('openFile').addEventListener('click', async () => {
+      if ('showOpenFilePicker' in window) {
+        try {
+          [fileHandle] = await window.showOpenFilePicker();
+          const file = await fileHandle.getFile();
+          textarea.value = await file.text();
+        } catch (err) {
+          console.error('File open error:', err);
+        }
+      } else {
+        alert('File System Access API not supported. Use Download instead.');
+      }
+    });
+
+    document.getElementById('saveFile').addEventListener('click', async () => {
+      if ('showSaveFilePicker' in window) {
+        try {
+          if (!fileHandle) {
+            fileHandle = await window.showSaveFilePicker();
+          }
+          const writable = await fileHandle.createWritable();
+          await writable.write(textarea.value);
+          await writable.close();
+          alert('File saved!');
+        } catch (err) {
+          console.error('Save error:', err);
+        }
+      } else {
+        alert('File System Access API not supported. Use Download instead.');
+      }
+    });
+
+    document.getElementById('downloadFile').addEventListener('click', () => {
+      const blob = new Blob([textarea.value], { type: 'text/plain' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'download.txt';
+      a.click();
+      URL.revokeObjectURL(url);
+    });
+
+    // Register Service Worker
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.register('service-worker.js')
+        .then(() => console.log('Service Worker registered'))
+        .catch(err => console.error('Service Worker registration failed:', err));
+    }
+  </script>
+</body>
+</html>

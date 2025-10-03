@@ -1,13 +1,24 @@
-self.addEventListener('fetch', event => {
-  if (event.request.method === 'POST' && event.request.url.endsWith('/index.html')) {
+self.addEventListener("fetch", (event) => {
+  const url = new URL(event.request.url);
+
+  if (url.pathname === "/index.html" && event.request.method === "POST") {
     event.respondWith((async () => {
       const formData = await event.request.formData();
-      const file = formData.get('file');
-      // Save in IndexedDB or Cache
-      console.log("Received file:", file);
+      const files = formData.getAll("file");
 
-      // Redirect back to index.html (GET) so app can read saved data
-      return Response.redirect('/index.html?share-target');
+      // Save files into IndexedDB
+      const dbReq = indexedDB.open("shared-files", 1);
+      dbReq.onupgradeneeded = () => {
+        dbReq.result.createObjectStore("files", { autoIncrement: true });
+      };
+      dbReq.onsuccess = () => {
+        const tx = dbReq.result.transaction("files", "readwrite");
+        const store = tx.objectStore("files");
+        files.forEach(file => store.add(file));
+      };
+
+      // Always redirect back to /index.html (GET)
+      return Response.redirect("/index.html", 303);
     })());
   }
 });

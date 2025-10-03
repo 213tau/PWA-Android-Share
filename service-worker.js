@@ -2,24 +2,28 @@ const CACHE_NAME = "pwa-fs-cache-v1";
 const FILES_TO_CACHE = [
   "/",
   "/index.html",
-  "/manifest.json",
-  "/icons/icon-192.png",
-  "/icons/icon-512.png"
+  "/manifest.json"
 ];
 
-// Install & cache
 self.addEventListener("install", (event) => {
   event.waitUntil(
-    caches.open(CACHE_NAME).then((cache) => cache.addAll(FILES_TO_CACHE))
+    (async () => {
+      const cache = await caches.open(CACHE_NAME);
+      // Don’t let a single failure hang install
+      await Promise.allSettled(
+        FILES_TO_CACHE.map(f =>
+          cache.add(f).catch(err => console.warn("Skip caching:", f, err))
+        )
+      );
+    })()
   );
   self.skipWaiting();
 });
 
-// Activate
 self.addEventListener("activate", (event) => {
   event.waitUntil(
-    caches.keys().then((keys) =>
-      Promise.all(keys.filter((k) => k !== CACHE_NAME).map((k) => caches.delete(k)))
+    caches.keys().then(keys =>
+      Promise.all(keys.filter(k => k !== CACHE_NAME).map(k => caches.delete(k)))
     )
   );
   self.clients.claim();
@@ -49,3 +53,4 @@ self.addEventListener("fetch", (event) => {
     })());
   }
 });
+

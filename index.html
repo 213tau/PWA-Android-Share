@@ -46,24 +46,33 @@ async function loadSharedFiles() {
 }
 
 
-loadSharedFiles().then(files => {
-  const list = document.getElementById("file-list");
+async function showFiles() {
+  const files = await loadSharedFiles();
+  const container = document.getElementById("file-list");
+  container.innerHTML = "";
+
   if (!files.length) {
-    list.innerHTML = "<p>No shared files yet.</p>";
-  } else {
-    files.forEach(file => {
-      const url = URL.createObjectURL(file);
-      const item = document.createElement("div");
-      item.innerHTML = `<p>${file.name} (${file.type})</p>`;
-      if (file.type.startsWith("image/")) {
-        item.innerHTML += `<img src="${url}" width="200">`;
-      }
-      list.appendChild(item);
-    });
+    container.innerHTML = "<p>No shared files yet.</p>";
+    return;
   }
-});
+
+  files.forEach(file => {
+    const url = URL.createObjectURL(file);
+    const item = document.createElement("div");
+    item.innerHTML = `<p>${file.name} (${file.type})</p>`;
+    if (file.type.startsWith("image/")) {
+      item.innerHTML += `<img src="${url}" width="200">`;
+    }
+    container.appendChild(item);
+  });
+}
+
+document.addEventListener("DOMContentLoaded", showFiles);
+
+
   </script>
 </body>
 </html>
+
 
 

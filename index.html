@@ -1,20 +1,23 @@
-<!DOCTYPE html>
-<html>
-<head>
-  <meta charset="UTF-8">
-  <title>PWA Share Target</title>
-</head>
-<body>
-  <h1>PWA File Share</h1>
-  <div id="output"></div>
+<script>
+async function loadSharedFiles() {
+  return new Promise((resolve) => {
+    const dbReq = indexedDB.open("shared-files", 1);
+    dbReq.onsuccess = () => {
+      const tx = dbReq.result.transaction("files", "readonly");
+      const store = tx.objectStore("files");
+      const getAll = store.getAll();
+      getAll.onsuccess = () => resolve(getAll.result);
+    };
+  });
+}
 
-  <script>
-    // If launched via Share Target (POST)
-    if (window.location.search.includes("share-target")) {
-      document.getElementById("output").innerText = "Shared data received!";
-    } else {
-      document.getElementById("output").innerText = "Normal GET load.";
+loadSharedFiles().then(files => {
+  files.forEach(file => {
+    const url = URL.createObjectURL(file);
+    document.body.innerHTML += `<p>${file.name}</p>`;
+    if (file.type.startsWith("image/")) {
+      document.body.innerHTML += `<img src="${url}" width="200">`;
     }
-  </script>
-</body>
-</html>
+  });
+});
+</script>

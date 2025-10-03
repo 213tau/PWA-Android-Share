@@ -40,7 +40,10 @@ self.addEventListener("fetch", (event) => {
 
       const dbReq = indexedDB.open("shared-files", 1);
       dbReq.onupgradeneeded = () => {
-        dbReq.result.createObjectStore("files", { autoIncrement: true });
+        const db = dbReq.result;
+        if (!db.objectStoreNames.contains("files")) {
+          db.createObjectStore("files", { autoIncrement: true });
+        }
       };
       dbReq.onsuccess = () => {
         const db = dbReq.result;
@@ -53,4 +56,5 @@ self.addEventListener("fetch", (event) => {
     })());
   }
 });
+
 

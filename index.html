@@ -1,23 +1,57 @@
-<script>
-async function loadSharedFiles() {
-  return new Promise((resolve) => {
-    const dbReq = indexedDB.open("shared-files", 1);
-    dbReq.onsuccess = () => {
-      const tx = dbReq.result.transaction("files", "readonly");
-      const store = tx.objectStore("files");
-      const getAll = store.getAll();
-      getAll.onsuccess = () => resolve(getAll.result);
-    };
-  });
-}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>FileShare PWA</title>
+  <link rel="manifest" href="manifest.json">
+</head>
+<body>
+  <h1>Shared Files</h1>
+  <div id="file-list"></div>
 
-loadSharedFiles().then(files => {
-  files.forEach(file => {
-    const url = URL.createObjectURL(file);
-    document.body.innerHTML += `<p>${file.name}</p>`;
-    if (file.type.startsWith("image/")) {
-      document.body.innerHTML += `<img src="${url}" width="200">`;
+  <script>
+    // Register service worker
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.register('service-worker.js')
+        .then(() => console.log('SW registered'))
+        .catch(err => console.error('SW failed:', err));
     }
-  });
-});
-</script>
+
+    // Load files from IndexedDB
+    async function loadSharedFiles() {
+      return new Promise((resolve) => {
+        const dbReq = indexedDB.open("shared-files", 1);
+
+        dbReq.onupgradeneeded = () => {
+          dbReq.result.createObjectStore("files", { autoIncrement: true });
+        };
+
+        dbReq.onsuccess = () => {
+          const db = dbReq.result;
+          const tx = db.transaction("files", "readonly");
+          const store = tx.objectStore("files");
+          const getAll = store.getAll();
+          getAll.onsuccess = () => resolve(getAll.result);
+        };
+      });
+    }
+
+    loadSharedFiles().then(files => {
+      const list = document.getElementById("file-list");
+      if (!files.length) {
+        list.innerHTML = "<p>No shared files yet.</p>";
+      } else {
+        files.forEach(file => {
+          const url = URL.createObjectURL(file);
+          const item = document.createElement("div");
+          item.innerHTML = `<p>${file.name} (${file.type})</p>`;
+          if (file.type.startsWith("image/")) {
+            item.innerHTML += `<img src="${url}" width="200">`;
+          }
+          list.appendChild(item);
+        });
+      }
+    });
+  </script>
+</body>
+</html>

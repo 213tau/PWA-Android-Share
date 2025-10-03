@@ -19,10 +19,9 @@
 
     function openDB() {
   return new Promise((resolve, reject) => {
-    const dbReq = indexedDB.open("shared-files", 1);
+    const dbReq = indexedDB.open("shared-files", 2); // bump version to force upgrade
 
     dbReq.onupgradeneeded = () => {
-      // This runs the first time OR if schema upgrades
       const db = dbReq.result;
       if (!db.objectStoreNames.contains("files")) {
         db.createObjectStore("files", { autoIncrement: true });
@@ -34,9 +33,9 @@
   });
 }
 
+
 async function loadSharedFiles() {
   const db = await openDB();
-
   return new Promise((resolve, reject) => {
     const tx = db.transaction("files", "readonly");
     const store = tx.objectStore("files");
@@ -45,6 +44,7 @@ async function loadSharedFiles() {
     getAll.onerror = () => reject(getAll.error);
   });
 }
+
 
 loadSharedFiles().then(files => {
   const list = document.getElementById("file-list");
@@ -65,4 +65,5 @@ loadSharedFiles().then(files => {
   </script>
 </body>
 </html>
+
 

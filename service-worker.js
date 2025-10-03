@@ -6,18 +6,19 @@ self.addEventListener("fetch", (event) => {
       const formData = await event.request.formData();
       const files = formData.getAll("file");
 
-      // Save files into IndexedDB
+      // Open DB and make sure store exists
       const dbReq = indexedDB.open("shared-files", 1);
       dbReq.onupgradeneeded = () => {
         dbReq.result.createObjectStore("files", { autoIncrement: true });
       };
       dbReq.onsuccess = () => {
-        const tx = dbReq.result.transaction("files", "readwrite");
+        const db = dbReq.result;
+        const tx = db.transaction("files", "readwrite");
         const store = tx.objectStore("files");
         files.forEach(file => store.add(file));
       };
 
-      // Always redirect back to /index.html (GET)
+      // Redirect back to index
       return Response.redirect("/index.html", 303);
     })());
   }

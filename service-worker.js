@@ -32,14 +32,12 @@ self.addEventListener("activate", (event) => {
 self.addEventListener("fetch", (event) => {
   const url = new URL(event.request.url);
 
-  // Catch share-target POST
   if (url.pathname === "/index.html" && event.request.method === "POST") {
     event.respondWith(
       (async () => {
         const formData = await event.request.formData();
         const files = formData.getAll("file");
 
-        // Save files into IndexedDB
         const dbReq = indexedDB.open("shared-files", 2);
         dbReq.onupgradeneeded = () => {
           const db = dbReq.result;
@@ -51,15 +49,17 @@ self.addEventListener("fetch", (event) => {
           const db = dbReq.result;
           const tx = db.transaction("files", "readwrite");
           const store = tx.objectStore("files");
-          files.forEach((file) => store.add({ name: file.name, type: file.type, blob: file }));
+          files.forEach(file => store.add(file)); // ✅ store file object directly
         };
 
-        // Redirect back to main page after handling
+        // Always redirect back to index.html
         return Response.redirect("/index.html", 303);
       })()
     );
   }
 });
+
+
 
 
 

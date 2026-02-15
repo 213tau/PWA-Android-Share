@@ -1,78 +1,21 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <title>FileShare PWA</title>
-  <link rel="manifest" href="manifest.json">
-</head>
-<body>
-  <h1>Shared Files</h1>
-  <div id="file-list"></div>
+<img id="preview">
 
-  <script>
-    // Register service worker
-    if ('serviceWorker' in navigator) {
-      navigator.serviceWorker.register('service-worker.js')
-        .then(() => console.log('SW registered'))
-        .catch(err => console.error('SW failed:', err));
-    }
+<script>
+(async () => {
+  const cache = await caches.open("shared-images");
+  const res = await cache.match("/__shared__");
 
-    function openDB() {
-  return new Promise((resolve, reject) => {
-    const dbReq = indexedDB.open("shared-files", 2); // bump version to force upgrade
+  if (!res) return;   // normal launch, no shared image
 
-    dbReq.onupgradeneeded = () => {
-      const db = dbReq.result;
-      if (!db.objectStoreNames.contains("files")) {
-        db.createObjectStore("files", { autoIncrement: true });
-      }
-    };
+  const blob = await res.blob();
+  const url = URL.createObjectURL(blob);
 
-    dbReq.onsuccess = () => resolve(dbReq.result);
-    dbReq.onerror = () => reject(dbReq.error);
-  });
-}
+  document.getElementById("preview").src = url;
 
-
-async function loadSharedFiles() {
-  const db = await openDB();
-  return new Promise((resolve, reject) => {
-    const tx = db.transaction("files", "readonly");
-    const store = tx.objectStore("files");
-    const getAll = store.getAll();
-    getAll.onsuccess = () => resolve(getAll.result);
-    getAll.onerror = () => reject(getAll.error);
-  });
-}
-
-
-async function showFiles() {
-  const files = await loadSharedFiles();
-  const container = document.getElementById("file-list");
-  container.innerHTML = "";
-
-  if (!files.length) {
-    container.innerHTML = "<p>No shared files yet.</p>";
-    return;
-  }
-
-  files.forEach(file => {
-    const url = URL.createObjectURL(file);
-    const item = document.createElement("div");
-    item.innerHTML = `<p>${file.name} (${file.type})</p>`;
-    if (file.type.startsWith("image/")) {
-      item.innerHTML += `<img src="${url}" width="200">`;
-    }
-    container.appendChild(item);
-  });
-}
-
-document.addEventListener("DOMContentLoaded", showFiles);
-
-
-  </script>
-</body>
-</html>
-
-
-
+  // now run:
+  // K-means
+  // CCL
+  // OCR
+  // CNIC crop
+})();
+</script>

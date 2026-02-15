@@ -1,33 +1,19 @@
 {
-  "name": "FileSharePWA",
-  "short_name": "FileSharePWA",
-  "start_url": "/index.html",
+  "name": "Tau Image Lab",
+  "short_name": "TauLab",
+  "start_url": "/share",
   "display": "standalone",
-  "background_color": "#ffffff",
-  "theme_color": "#317EFB",
-  "icons": [
-    {
-      "src": "/icons/icon-192.png",
-      "sizes": "192x192",
-      "type": "image/png"
-    },
-    {
-      "src": "/icons/icon-512.png",
-      "sizes": "512x512",
-      "type": "image/png"
-    }
-  ],
+  "background_color": "#000000",
+  "theme_color": "#000000",
   "share_target": {
-    "action": "/index.html", 
+    "action": "/share",
     "method": "POST",
     "enctype": "multipart/form-data",
     "params": {
-      "title": "title",
-      "text": "text",
       "files": [
         {
-          "name": "file",
-          "accept": ["image/*", "application/pdf"]
+          "name": "images",
+          "accept": ["image/*"]
         }
       ]
     }
